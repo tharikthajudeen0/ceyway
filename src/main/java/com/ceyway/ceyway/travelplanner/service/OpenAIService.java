@@ -34,20 +34,25 @@ public class OpenAIService {
     private String generateLLMPrompt(String start, String destination, List<String> selectedOnTheWay, List<String> selectedAttractions) {
         return String.format("""
     Generate a structured JSON trip plan for a journey from %s to %s. 
-    The user wants to visit these places along the way: %s. 
-    At the destination, they are interested in: %s. 
+    The user wants to visit the following places along the way: %s. 
+    At the destination, they want to visit the following attractions: %s. 
     
-    The plan should include:
-    - Day-wise itinerary
-    - Time slots for each attraction
-    - Estimated time to spend at each attraction
-    - Distance between attractions
+    The plan should strictly follow these locations:
+    - Only include the places listed in the 'on the way' list for the journey.
+    - Only include the attractions listed in the 'destination' list at the final destination.
     
-    Provide the response in structured JSON format in a single line, without newline characters:
-    {"day1": {"activities": [{"time": "9:00 AM", "place": "Attraction A", "duration": "1 hour"}]}}
+    The plan must:
+    - Provide a simple itinerary, listing each location/attraction, with time slots.
+    - Include the estimated time to spend at each location and attraction.
+    - Provide the distance between consecutive locations and attractions.
+    
+    The response should be in structured JSON format, in a single line, without newlines. 
+    Example format:
+    {"activities": [{"time": "9:00 AM", "place": "Attraction A", "duration": "1 hour"}]}
     """,
                 start, destination, String.join(", ", selectedOnTheWay), String.join(", ", selectedAttractions));
     }
+
 
     /**
      * Sends the generated travel itinerary prompt to OpenAI and returns the response as a structured JSON.
