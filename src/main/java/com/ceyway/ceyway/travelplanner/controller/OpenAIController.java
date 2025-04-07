@@ -1,14 +1,14 @@
 package com.ceyway.ceyway.travelplanner.controller;
 
+import com.ceyway.ceyway.travelplanner.model.DTO.TripPlanRequest;
 import com.ceyway.ceyway.travelplanner.service.OpenAIService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/openai")
+@RequestMapping("api/travel-app")
 public class OpenAIController {
 
     private final OpenAIService openAIService;
@@ -17,46 +17,46 @@ public class OpenAIController {
         this.openAIService = openAIService;
     }
 
-    /**
-     * Endpoint to generate a trip plan using OpenAI
-     *
-     * @param request The input data including start, destination, selected locations, and attractions
-     * @return A structured, nested JSON response containing the trip plan
-     */
     @PostMapping("/generate-trip-plan")
-    public Map<String, Object> generateTripPlan(@RequestBody Map<String, Object> request) {
-        String start = (String) request.get("start");
-        String destination = (String) request.get("destination");
-        List<String> selectedOnTheWay = (List<String>) request.get("selectedOnTheWay");
-        List<String> selectedAttractions = (List<String>) request.get("selectedAttractions");
-
-        // Input validation
-        if (start == null || start.isEmpty() || destination == null || destination.isEmpty()) {
+    public Map<String, Object> generateTripPlan(@RequestBody TripPlanRequest request) {
+        if (request.getStart() == null || request.getStart().isEmpty() ||
+                request.getDestination() == null || request.getDestination().isEmpty()) {
             return Map.of(
                     "status", "error",
                     "message", "Start and destination must be provided."
             );
         }
 
-        if (selectedOnTheWay == null || selectedAttractions == null) {
+        if (request.getSelectedOnTheWay() == null || request.getSelectedAttractions() == null) {
             return Map.of(
                     "status", "error",
                     "message", "Selected on-the-way locations and attractions must be provided."
             );
         }
 
-        // Call service to generate the trip plan
-        JsonNode tripPlan = openAIService.getTripPlanResponse(start, destination, selectedOnTheWay, selectedAttractions);
+        JsonNode tripPlan = openAIService.getTripPlanResponse(
+                request.getStart(),
+                request.getDestination(),
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getVehicleType(),
+                request.getNumOfMembers(),
+                request.getSelectedOnTheWay(),
+                request.getSelectedAttractions()
+        );
 
-        // Return a nested structured response
         return Map.of(
                 "status", "success",
                 "message", "Trip plan generated successfully",
                 "data", Map.of(
-                        "start", start,
-                        "destination", destination,
-                        "selectedOnTheWay", selectedOnTheWay,
-                        "selectedAttractions", selectedAttractions,
+                        "start", request.getStart(),
+                        "destination", request.getDestination(),
+                        "startDate", request.getStartDate(),
+                        "endDate", request.getEndDate(),
+                        "vehicleType", request.getVehicleType(),
+                        "numOfMembers", request.getNumOfMembers(),
+                        "selectedOnTheWay", request.getSelectedOnTheWay(),
+                        "selectedAttractions", request.getSelectedAttractions(),
                         "tripPlan", tripPlan
                 )
         );
