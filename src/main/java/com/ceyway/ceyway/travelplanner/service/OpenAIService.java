@@ -3,8 +3,8 @@ package com.ceyway.ceyway.travelplanner.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import org.springframework.http.*;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -28,62 +28,62 @@ public class OpenAIService {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Generates an LLM prompt for a trip plan with day-wise time slots, attractions, and nearby places.
-     */
-    private String generateLLMPrompt(String start, String destination, List<String> selectedOnTheWay, List<String> selectedAttractions) {
+    private String generateLLMPrompt(String start, String destination, String startDate, String endDate,
+                                     String vehicleType, int numOfMembers,
+                                     List<String> selectedOnTheWay, List<String> selectedAttractions) {
+
         return String.format("""
-    Generate a structured JSON trip plan for a journey from %s to %s. 
-    The user wants to visit the following places along the way: %s. 
-    At the destination, they want to visit the following attractions: %s. 
-    
-    The plan should strictly follow these locations:
-    - Only include the places listed in the 'on the way' list for the journey.
-    - Only include the attractions listed in the 'destination' list at the final destination.
-    
-    The plan must:
-    - Provide a simple itinerary, listing each location/attraction, with time slots.
-    - Include the estimated time to spend at each location and attraction.
-    - Provide the distance between consecutive locations and attractions.
-    
-    The response should be in structured JSON format, in a single line, without newlines. 
-    Example format:
-    {"activities": [{"time": "9:00 AM", "place": "Attraction A", "duration": "1 hour"}]}
-    """,
-                start, destination, String.join(", ", selectedOnTheWay), String.join(", ", selectedAttractions));
+            Generate a structured JSON trip plan for a group of %d people traveling from %s to %s 
+            using a %s from %s to %s.
+
+            The group wants to visit the following locations on the way: %s.
+            At the destination, they want to visit the following attractions: %s.
+
+            Guidelines:
+            - The total trip duration should be calculated based on the travel dates.
+            - Split the itinerary across the calculated number of days.
+            - Plan activities based on realistic travel time and group size.
+            - Take into account the vehicle type when estimating travel time.
+            - For each day, provide:
+                - A list of activities with:
+                    - Time (e.g., "9:00 AM")
+                    - Place name
+                    - Duration at the place (e.g., "1 hour")
+                    - Distance and travel time from the previous location (if applicable)
+
+            Output must be a compact structured JSON object in one line.
+            Example format:
+            {"days": [{"date": "2024-04-07", "activities": [{"time": "9:00 AM", "place": "Attraction A", "duration": "1 hour", "distance": "10 km", "travelTime": "15 min"}]}]}
+        """,
+                numOfMembers, start, destination, vehicleType, startDate, endDate,
+                String.join(", ", selectedOnTheWay),
+                String.join(", ", selectedAttractions)
+        );
     }
 
-
-    /**
-     * Sends the generated travel itinerary prompt to OpenAI and returns the response as a structured JSON.
-     */
-    public JsonNode getTripPlanResponse(String start, String destination, List<String> selectedOnTheWay, List<String> selectedAttractions) {
+    public JsonNode getTripPlanResponse(String start, String destination, String startDate, String endDate,
+                                        String vehicleType, int numOfMembers,
+                                        List<String> selectedOnTheWay, List<String> selectedAttractions) {
         try {
-            // Generate the travel prompt
-            String prompt = generateLLMPrompt(start, destination, selectedOnTheWay, selectedAttractions);
+            String prompt = generateLLMPrompt(start, destination, startDate, endDate, vehicleType, numOfMembers, selectedOnTheWay, selectedAttractions);
 
-            // Prepare request body
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", MODEL);
             requestBody.put("temperature", TEMPERATURE);
             requestBody.put("max_tokens", MAX_TOKENS);
             requestBody.put("messages", Collections.singletonList(Map.of("role", "user", "content", prompt)));
 
-            // Set headers
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(apiKey);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // Make API call
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(requestBody), headers);
             ResponseEntity<String> response = restTemplate.exchange(API_URL, HttpMethod.POST, entity, String.class);
 
-            // Check for a successful response status code
             if (response.getStatusCode() != HttpStatus.OK) {
                 throw new RuntimeException("Error: Unable to generate trip plan, OpenAI returned status " + response.getStatusCode());
             }
 
-            // Extract and return the assistant's structured JSON response
             return extractResponseMessage(response.getBody());
 
         } catch (Exception e) {
@@ -97,8 +97,7 @@ public class OpenAIService {
             JsonNode choicesNode = rootNode.path("choices");
             if (choicesNode.isArray() && choicesNode.size() > 0) {
                 JsonNode messageNode = choicesNode.get(0).path("message").path("content");
-                // Return the structured JSON response directly
-                return objectMapper.readTree(messageNode.asText()); // Parse the content as JSON
+                return objectMapper.readTree(messageNode.asText());
             }
             throw new RuntimeException("Error: No choices found in the response.");
         } catch (Exception e) {

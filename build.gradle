@@ -29,4 +29,7 @@ dependencies {
 
 	implementation group: 'com.google.apis', name: 'google-api-services-drive', version: 'v3-rev197-1.25.0'
 	implementation group: 'com.google.oauth-client', name: 'google-oauth-client', version: '1.37.0'
+
+	implementation 'org.jboss.logging:jboss-logging:3.5.3.Final'
+
 }

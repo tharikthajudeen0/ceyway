@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/travel")
+@RequestMapping("/api/travel-app")
 public class TravelController {
     @Autowired
     private TravelService travelService;
 
     // Endpoint to get attractions based on district name
-    @GetMapping("/attractions/{districtName}")
+    @GetMapping("/get-attractions/{districtName}")
     public List<Attraction> getAttractionsByDistrict(@PathVariable String districtName) {
         List<Attraction> attractions = travelService.getAttractionsByDistrict(districtName);
 
@@ -29,7 +29,7 @@ public class TravelController {
         return attractions;
     }
 
-    @GetMapping("route-attractions/{startDistrict}/{endDistrict}")
+    @GetMapping("get-ontheway-attractions/{startDistrict}/{endDistrict}")
     public List<RouteAttraction> getRouteAttractionsByStartAndEnd(@PathVariable String startDistrict, @PathVariable String endDistrict) {
         List<RouteAttraction> routeAttractions =  travelService.getRouteAttractionsByDistrict(startDistrict, endDistrict);
 
