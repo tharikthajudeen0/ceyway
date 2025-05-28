@@ -18,5 +18,6 @@ public class Attraction {
     private String category;
     private String description;
     private String district;
+    private String imagePath;
 
 }
