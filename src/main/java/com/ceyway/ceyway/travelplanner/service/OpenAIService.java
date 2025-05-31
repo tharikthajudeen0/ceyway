@@ -22,17 +22,33 @@ public class OpenAIService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final RetrievalService retrievalService;
 
-    public OpenAIService(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public OpenAIService(RestTemplate restTemplate, ObjectMapper objectMapper, RetrievalService retrievalService) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.retrievalService = retrievalService;
     }
 
     private String generateLLMPrompt(String start, String destination, String startDate, String endDate,
                                      String vehicleType, int numOfMembers,
                                      List<String> selectedOnTheWay, List<String> selectedAttractions) {
 
+        // Combine keywords to query retrieval service
+        String retrievalQuery = String.join(" ",
+                List.of(start, destination, String.join(" ", selectedOnTheWay), String.join(" ", selectedAttractions)));
+
+        // Retrieve relevant context from your PostgreSQL knowledge base
+        String context = retrievalService.retrieveContext(retrievalQuery);
+        if (context == null || context.isBlank()) {
+            context = "No additional contextual information available.";
+        }
+
+        // Construct prompt embedding the retrieved context for RAG
         return String.format("""
+            Use the following contextual information to assist in planning the trip:
+            %s
+
             Generate a structured JSON trip plan for a group of %d people traveling from %s to %s 
             using a %s from %s to %s.
 
@@ -53,8 +69,9 @@ public class OpenAIService {
 
             Output must be a compact structured JSON object in one line.
             Example format:
-            {"days": [{"date": "2024-04-07", "activities": [{"time": "9:00 AM", "place": "Attraction A", "duration": "1 hour", "distance": "10 km", "travelTime": "15 min"}]}]}
-        """,
+            {\"days\": [{\"date\": \"2024-04-07\", \"activities\": [{\"time\": \"9:00 AM\", \"place\": \"Attraction A\", \"duration\": \"1 hour\", \"distance\": \"10 km\", \"travelTime\": \"15 min\"}]}]}
+            """,
+                context,
                 numOfMembers, start, destination, vehicleType, startDate, endDate,
                 String.join(", ", selectedOnTheWay),
                 String.join(", ", selectedAttractions)
