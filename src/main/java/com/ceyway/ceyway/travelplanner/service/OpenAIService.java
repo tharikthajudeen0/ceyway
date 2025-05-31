@@ -73,98 +73,99 @@ public class OpenAIService {
 
         // Construct prompt embedding the retrieved context for RAG
         return String.format("""
-Use the following contextual information and weather forecast to assist in planning the trip:
-%s
-
-%s
-
-Generate a structured JSON trip plan for a group of %d people traveling from %s to %s 
-using a %s from %s to %s.
-
-The group wants to visit the following locations on the way: %s.
-At the destination, they want to visit the following attractions: %s.
-
-Guidelines:
-- The total trip duration should be calculated based on the travel dates.
-- Split the itinerary across the calculated number of days.
-- Label each day explicitly as "Day 1", "Day 2", etc.
-- Consider the weather when planning outdoor activities.
-- Plan activities based on realistic travel time and group size.
-- Take into account the vehicle type when estimating travel time.
-- For each day, provide:
-    - Day label (e.g., "Day 1")
-    - Date (e.g., "2025-04-10")
-    - Expected weather details for the day including:
-        - description
-        - temperature
-    - A list of activities with:
-        - Time (e.g., "9:00 AM")
-        - Place name
-        - Duration at the place (e.g., "1 hour")
-        - Distance and travel time from the previous location (if applicable)
-- In addition to the itinerary:
-    - Include a 'weatherSummary' section mapping each date to a weather object containing:
-        - location
-        - description
-        - temperature (°C)
-        - humidity (percentage)
-        - windSpeed (m/s)
-    - Include an 'estimatedBudget' object with rough estimates in LKR for:
-        - transportation
-        - accommodation
-        - food
-        - activities
-        - total
-
-Output must be a compact structured JSON object in one line.
-
-Example format:
-{
-  "tripDuration": "3 days",
-  "estimatedBudget": {
-    "transportation": "LKR 15000",
-    "accommodation": "LKR 20000",
-    "food": "LKR 8000",
-    "activities": "LKR 5000",
-    "total": "LKR 48000"
-  },
-  "weatherSummary": {
-    "2025-04-10": {
-      "location": "Trincomalee",
-      "description": "overcast clouds",
-      "temperature": 31.26,
-      "humidity": 64.0,
-      "windSpeed": 9.83
-    }
-  },
-  "itinerary": [
-    {
-      "day": "Day 1",
-      "date": "2025-04-10",
-      "weather": {
-        "description": "overcast clouds",
-        "temperature": 31.26
-      },
-      "activities": [
-        {
-          "time": "9:00 AM",
-          "place": "Habarana",
-          "duration": "1 hour",
-          "distance": "45 km",
-          "travelTime": "1 hour"
-        }
-      ]
-    }
-  ]
-}
-""",
-                context,
-                weatherInfo,
-                numOfMembers, start, destination, vehicleType, startDate, endDate,
-                String.join(", ", selectedOnTheWay),
-                String.join(", ", selectedAttractions)
-        );
-
+            Use the following contextual information and weather forecast to assist in planning the trip:
+            %s
+            
+            %s
+            
+            Generate a structured JSON trip plan for a group of %d people traveling from %s to %s 
+            using a %s from %s to %s.
+            
+            The group wants to visit the following locations on the way: %s.
+            At the destination, they want to visit the following attractions: %s.
+            
+            Guidelines:
+            - The total trip duration should be calculated based on the travel dates.
+            - Split the itinerary across the calculated number of days.
+            - Label each day explicitly as "Day 1", "Day 2", etc.
+            - Consider the weather when planning outdoor activities.
+            - Plan activities based on realistic travel time and group size.
+            - Take into account the vehicle type when estimating travel time.
+            - For each day, provide:
+                - Day label (e.g., "Day 1")
+                - Date (e.g., "2025-04-10")
+                - Expected weather details for the day including:
+                    - description
+                    - temperature
+                - A list of activities with:
+                    - Time (e.g., "9:00 AM")
+                    - Place name
+                    - Duration at the place (e.g., "1 hour")
+                    - Distance and travel time from the previous location (if applicable)
+            - In addition to the itinerary:
+                - Include a 'weatherSummary' section mapping each date to a weather object containing:
+                    - location
+                    - description
+                    - temperature (°C)
+                    - humidity (percentage)
+                    - windSpeed (m/s)
+                - Include an 'estimatedBudget' object with rough estimates in LKR for:
+                    - transportation
+                    - accommodation
+                    - food
+                    - activities
+                    - total
+                - Include an overall 'weatherAssessment' field with a short summary indicating whether the weather conditions are good, moderate, or bad for traveling and outdoor activities during the trip.
+            
+            Output must be a compact structured JSON object in one line.
+            
+            Example format:
+            {
+              "tripDuration": "3 days",
+              "estimatedBudget": {
+                "transportation": "LKR 15000",
+                "accommodation": "LKR 20000",
+                "food": "LKR 8000",
+                "activities": "LKR 5000",
+                "total": "LKR 48000"
+              },
+              "weatherSummary": {
+                "2025-04-10": {
+                  "location": "Trincomalee",
+                  "description": "overcast clouds",
+                  "temperature": 31.26,
+                  "humidity": 64.0,
+                  "windSpeed": 9.83
+                }
+              },
+              "weatherAssessment": "The weather is generally good for travel with some cloud cover but no rain expected.",
+              "itinerary": [
+                {
+                  "day": "Day 1",
+                  "date": "2025-04-10",
+                  "weather": {
+                    "description": "overcast clouds",
+                    "temperature": 31.26
+                  },
+                  "activities": [
+                    {
+                      "time": "9:00 AM",
+                      "place": "Habarana",
+                      "duration": "1 hour",
+                      "distance": "45 km",
+                      "travelTime": "1 hour"
+                    }
+                  ]
+                }
+              ]
+            }
+            """,
+                            context,
+                            weatherInfo,
+                            numOfMembers, start, destination, vehicleType, startDate, endDate,
+                            String.join(", ", selectedOnTheWay),
+                            String.join(", ", selectedAttractions)
+                    );
 
     }
 
