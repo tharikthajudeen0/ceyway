@@ -4,6 +4,7 @@ import com.ceyway.ceyway.travelplanner.model.Attraction;
 import com.ceyway.ceyway.travelplanner.repository.AttractionRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -21,15 +22,27 @@ public class RouteService {
     @Value("${openrouteservice.api.key}")
     private String orsApiKey;
 
+    @Autowired
+    private GeoLocationService geoLocationService;
+
     public RouteService(RestTemplate restTemplate, AttractionRepository attractionRepository, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.attractionRepository = attractionRepository;
         this.objectMapper = objectMapper;
     }
 
+
     public List<Attraction> getAttractionsByDistrict(String districtName) {
         return attractionRepository.findByDistrict(districtName);
     }
+
+    // New method: get attractions by coordinates (lat, lng)
+    public List<Attraction> getAttractionsByCoordinates(double lat, double lng) {
+        String district = geoLocationService.getDistrict(lat, lng);
+        System.out.println("Detected district: " + district);
+        return attractionRepository.findByDistrictIgnoreCase(district);
+    }
+
 
     public List<Attraction> findNearbyAttractions(double originLat, double originLng, double destLat, double destLng, double maxDistanceKm) throws Exception {
         // Call OpenRouteService directions API

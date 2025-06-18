@@ -29,6 +29,23 @@ public class RouteController {
         return attractions;
     }
 
+
+    // New endpoint: Get attractions by lat/lng coordinates
+    @GetMapping("/attractions/coords")
+    public List<Attraction> getAttractionsByCoordinates(
+            @RequestParam double lat,
+            @RequestParam double lng) {
+
+        List<Attraction> attractions = routeService.getAttractionsByCoordinates(lat, lng);
+
+        if (attractions.isEmpty()) {
+            throw new RuntimeException("No attractions found near the provided location.");
+        }
+
+        return attractions;
+    }
+
+
     @GetMapping("/route/nearby-attractions")
     public List<Attraction> getNearbyAttractions(
             @RequestParam double originLat,
@@ -36,6 +53,14 @@ public class RouteController {
             @RequestParam double destLat,
             @RequestParam double destLng,
             @RequestParam(defaultValue = "5") double maxDistanceKm) throws Exception {
-        return routeService.findNearbyAttractions(originLat, originLng, destLat, destLng, maxDistanceKm);
+
+        List<Attraction> attractions = routeService.findNearbyAttractions(originLat, originLng, destLat, destLng, maxDistanceKm);
+
+        if (attractions.isEmpty()) {
+            throw new RuntimeException("No nearby attractions found within " + maxDistanceKm + " km.");
+        }
+
+        return attractions;
     }
+
 }
