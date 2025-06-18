@@ -1,6 +1,7 @@
 package com.ceyway.ceyway.travelplanner.controller;
 
 import com.ceyway.ceyway.travelplanner.model.DTO.TripPlanRequest;
+import com.ceyway.ceyway.travelplanner.service.GeoLocationService;
 import com.ceyway.ceyway.travelplanner.service.OpenAIService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.web.bind.annotation.*;
@@ -13,31 +14,29 @@ import java.util.Map;
 public class OpenAIController {
 
     private final OpenAIService openAIService;
+    private final GeoLocationService geoLocationService;
 
-    public OpenAIController(OpenAIService openAIService) {
+    public OpenAIController(OpenAIService openAIService, GeoLocationService geoLocationService) {
         this.openAIService = openAIService;
+        this.geoLocationService = geoLocationService;
     }
 
     @PostMapping("/generate-trip-plan")
     public Map<String, Object> generateTripPlan(@RequestBody TripPlanRequest request) {
-        if (request.getStart() == null || request.getStart().isEmpty() ||
-                request.getDestination() == null || request.getDestination().isEmpty()) {
-            return Map.of(
-                    "status", "error",
-                    "message", "Start and destination must be provided."
-            );
-        }
+        // Convert coordinates to place names
+        String startPlace = geoLocationService.getPlaceName(request.getStartLat(), request.getStartLon());
+        String destinationPlace = geoLocationService.getDistrict(request.getDestinationLat(), request.getDestinationLon());
 
-        if (request.getSelectedOnTheWay() == null || request.getSelectedAttractions() == null) {
+        if (startPlace.equals("Unknown location") || destinationPlace.equals("Unknown location")) {
             return Map.of(
                     "status", "error",
-                    "message", "Selected on-the-way locations and attractions must be provided."
+                    "message", "Could not resolve location names from coordinates."
             );
         }
 
         JsonNode tripPlan = openAIService.getTripPlanResponse(
-                request.getStart(),
-                request.getDestination(),
+                startPlace,
+                destinationPlace,
                 request.getStartDate(),
                 request.getEndDate(),
                 request.getVehicleType(),
@@ -50,8 +49,8 @@ public class OpenAIController {
                 "status", "success",
                 "message", "Trip plan generated successfully",
                 "data", Map.of(
-                        "start", request.getStart(),
-                        "destination", request.getDestination(),
+                        "start", startPlace,
+                        "destination", destinationPlace,
                         "startDate", request.getStartDate(),
                         "endDate", request.getEndDate(),
                         "vehicleType", request.getVehicleType(),

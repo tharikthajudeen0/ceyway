@@ -10,8 +10,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TripPlanRequest {
-    private String start;
-    private String destination;
+    private double startLat;
+    private double startLon;
+    private double destinationLat;
+    private double destinationLon;
     private String startDate;
     private String endDate;
     private String vehicleType;
