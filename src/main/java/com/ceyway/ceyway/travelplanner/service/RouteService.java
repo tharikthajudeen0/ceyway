@@ -39,7 +39,6 @@ public class RouteService {
     // New method: get attractions by coordinates (lat, lng)
     public List<Attraction> getAttractionsByCoordinates(double lat, double lng) {
         String district = geoLocationService.getDistrict(lat, lng);
-        System.out.println("Detected district: " + district);
         return attractionRepository.findByDistrictIgnoreCase(district);
     }
 

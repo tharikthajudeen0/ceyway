@@ -21,8 +21,6 @@ public class GeoLocationService {
             JsonNode root = mapper.readTree(response);
             JsonNode address = root.path("address");
 
-            System.out.println("Raw address: " + address.toString());
-
             if (address.has("district")) {
                 return cleanDistrictName(address.get("district").asText());
             }
