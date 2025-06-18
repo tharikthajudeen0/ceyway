@@ -10,4 +10,8 @@ public interface AttractionRepository extends JpaRepository<Attraction, String> 
     // Find all attractions by district
     List<Attraction> findByDistrict(String district);
 
+    // Find all attractions by district ignore case
+    List<Attraction> findByDistrictIgnoreCase(String district);
+
+
 }
