@@ -66,7 +66,8 @@ public class RouteService {
         List<Attraction> nearbyAttractions = new ArrayList<>();
 
         // 2. Get destination district from nearest attraction (you could also pass it from frontend or DB)
-        String destinationDistrict = getClosestDistrict(destLat, destLng, allAttractions);
+        //String destinationDistrict = getClosestDistrict(destLat, destLng, allAttractions);
+        String destinationDistrict = geoLocationService.getDistrict(destLat, destLng);
 
         for (Attraction attraction : allAttractions) {
             // Exclude attractions in the same district as destination
